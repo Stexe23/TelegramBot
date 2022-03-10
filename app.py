@@ -1,6 +1,6 @@
-import json
+
 import telebot
-import requests
+from extensions import APIException, ValueConvert
 from config import TOKEN, key
 
 bot = telebot.TeleBot(TOKEN)
@@ -24,10 +24,14 @@ def values(message: telebot.types.Message):
 
 @bot.message_handler(content_types=['text', ])
 def conver(message: telebot.types.Message):
-    quote, base, amount = message.text.split(' ')
-    r = requests.get(f'https://min-api.cryptocompare.com/data/price?fsym={key[quote]}&tsyms={key[base]}')
-    resp = json.loads(r.content)[key[base]]
-    text = f'Итого: {amount} {quote} равна {resp} {base}'
+    value = message.text.split(' ')
+
+    if len(value) != 3:
+        raise APIException('Слишком много пораметров')
+
+    quote, base, amount = value
+    resp = ValueConvert.convert(quote, base, amount)
+    text = f'Итого: {amount} {quote} равно {resp} {base}'
     bot.send_message(message.chat.id, text)
 
 
